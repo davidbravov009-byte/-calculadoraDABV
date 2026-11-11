@@ -1,58 +1,64 @@
-
-import { View, StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { ClaveOperador, OPERADORES, PORCENTAJE } from "../../logica/motor";
 import Boton from "./boton";
 
 type BotonDato = {
-  texto: string;
+  valor: string; // lo que recibe la calculadora
+  texto?: string; // lo que se ve en el botón (si es distinto)
+  emoji?: string;
   color?: string;
   colorTexto?: string;
   ancho?: number;
 };
 
+const FUNCION = "#252831";
+const MENTA = "#7CF0C4";
+const NARANJA = "#FF7A45";
+const FONDO = "#0D0E12";
+
+const operacion = (c: ClaveOperador): BotonDato => ({
+  valor: c,
+  emoji: OPERADORES[c].emoji,
+  color: NARANJA,
+});
+
 const botones: BotonDato[][] = [
   [
-    { texto: "AC", color: "#39414C", colorTexto: "#FFFFFF" },
-    { texto: "DEL", color: "#39414C", colorTexto: "#FFFFFF" },
-    { texto: "%", color: "#39414C", colorTexto: "#FFFFFF" },
-    { texto: "÷", color: "#1769FF" },
+    { valor: "AC", emoji: "🧹", color: FUNCION, colorTexto: MENTA },
+    { valor: "DEL", texto: "⌫", color: FUNCION, colorTexto: MENTA },
+    { valor: "%", emoji: PORCENTAJE.emoji, color: FUNCION, colorTexto: MENTA },
+    operacion("÷"),
   ],
+  [{ valor: "7" }, { valor: "8" }, { valor: "9" }, operacion("×")],
+  [{ valor: "4" }, { valor: "5" }, { valor: "6" }, operacion("−")],
+  [{ valor: "1" }, { valor: "2" }, { valor: "3" }, operacion("+")],
   [
-    { texto: "7" },
-    { texto: "8" },
-    { texto: "9" },
-    { texto: "×", color: "#1769FF" },
-  ],
-  [
-    { texto: "4" },
-    { texto: "5" },
-    { texto: "6" },
-    { texto: "−", color: "#1769FF" },
-  ],
-  [
-    { texto: "1" },
-    { texto: "2" },
-    { texto: "3" },
-    { texto: "+", color: "#1769FF" },
-  ],
-  [
-    { texto: "0", ancho: 2 },
-    { texto: "." },
-    { texto: "=", color: "#FFFFFF", colorTexto: "#111820" },
+    { valor: "0", ancho: 2 },
+    { valor: "." },
+    { valor: "=", emoji: "✨", color: MENTA, colorTexto: FONDO },
   ],
 ];
 
-export default function Rejilla() {
+interface RejillaProps {
+  onPresionar: (valor: string) => void;
+  operadorActivo: ClaveOperador | null;
+}
+
+export default function Rejilla({ onPresionar, operadorActivo }: RejillaProps) {
   return (
     <View style={styles.contenedor}>
       {botones.map((fila, indice) => (
         <View style={styles.fila} key={indice}>
-          {fila.map((boton, i) => (
+          {fila.map((b) => (
             <Boton
-              key={i}
-              texto={boton.texto}
-              color={boton.color}
-              colorTexto={boton.colorTexto}
-              ancho={boton.ancho}
+              key={b.valor}
+              texto={b.texto ?? b.valor}
+              emoji={b.emoji}
+              color={b.color}
+              colorTexto={b.colorTexto}
+              ancho={b.ancho}
+              activo={b.valor === operadorActivo}
+              onPress={() => onPresionar(b.valor)}
             />
           ))}
         </View>
@@ -63,8 +69,7 @@ export default function Rejilla() {
 
 const styles = StyleSheet.create({
   contenedor: {
-    paddingHorizontal: 9,
-    paddingBottom: 8,
+    paddingHorizontal: 11,
   },
   fila: {
     flexDirection: "row",

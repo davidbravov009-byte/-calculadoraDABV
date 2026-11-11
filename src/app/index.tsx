@@ -1,23 +1,59 @@
-
-import { StyleSheet, Text, View } from "react-native";
+   import { useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Display from "../components/botones/display";
 import Rejilla from "../components/botones/rejilla";
+import { useCalculadora } from "../hooks/UseCalculadora";
 
 export default function Index() {
+  const insets = useSafeAreaInsets();
+  const [verHistorial, setVerHistorial] = useState(false);
+  const {
+    expresion,
+    resultado,
+    modo,
+    operadorActivo,
+    historial,
+    vibracionActiva,
+    alternarVibracion,
+    usarResultado,
+    borrarHistorial,
+    pulsar,
+  } = useCalculadora();
+
   return (
-    <View style={styles.pantalla}>
-      <View style={styles.decoracion}>
-        <Text style={styles.marca}>NG / 2026</Text>
-        <Text style={styles.estado}>● SISTEMA ACTIVO</Text>
+    <View
+      style={[
+        styles.pantalla,
+        { paddingTop: insets.top + 10, paddingBottom: insets.bottom + 10 },
+      ]}
+    >
+      <View style={styles.barra}>
+        <Pressable style={styles.pastilla} onPress={() => setVerHistorial(true)}>
+          <Text style={styles.pastillaTexto}>
+            🕘 Historial{historial.length > 0 ? ` · ${historial.length}` : ""}
+          </Text>
+        </Pressable>
+
+        <Pressable style={styles.pastilla} onPress={alternarVibracion}>
+          <Text style={styles.pastillaTexto}>
+            {vibracionActiva ? "📳 Vibración" : "📴 Silencio"}
+          </Text>
+        </Pressable>
       </View>
 
-      <Display />
+      <Display
+        expresion={expresion}
+        resultado={resultado}
+        modo={modo}
+        historial={historial}
+        historialVisible={verHistorial}
+        onCerrarHistorial={() => setVerHistorial(false)}
+        onElegirResultado={usarResultado}
+        onBorrarHistorial={borrarHistorial}
+      />
 
-      <Rejilla />
-
-      <Text style={styles.credito}>
-        NEXUS PRO / DIGITAL INTERFACE
-      </Text>
+      <Rejilla onPresionar={pulsar} operadorActivo={operadorActivo} />
     </View>
   );
 }
@@ -25,32 +61,24 @@ export default function Index() {
 const styles = StyleSheet.create({
   pantalla: {
     flex: 1,
-    backgroundColor: "#0B0D11",
+    backgroundColor: "#0D0E12",
     justifyContent: "flex-end",
-    paddingTop: 35,
   },
-  decoracion: {
+  barra: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    marginBottom: 5,
+    paddingHorizontal: 16,
+    marginBottom: 12,
   },
-  marca: {
-    color: "#3685FF",
-    fontSize: 12,
-    fontWeight: "900",
-    letterSpacing: 2,
+  pastilla: {
+    backgroundColor: "#181A20",
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
   },
-  estado: {
-    color: "#77818F",
-    fontSize: 10,
-  },
-  credito: {
-    color: "#667181",
-    fontSize: 9,
-    textAlign: "center",
-    letterSpacing: 2,
-    paddingVertical: 10,
+  pastillaTexto: {
+    color: "#C4CAD4",
+    fontSize: 13,
+    fontWeight: "600",
   },
 });
-

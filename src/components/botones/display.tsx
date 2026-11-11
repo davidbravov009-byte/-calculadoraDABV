@@ -1,149 +1,211 @@
+import { FlatList, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import type { Registro } from "../../logica/motor";
 
-import { View, Text, StyleSheet } from "react-native";
+interface DisplayProps {
+  expresion: string;
+  resultado: string;
+  modo: string | null; // ej: "SUMA ➕"
+  historial: Registro[];
+  historialVisible: boolean;
+  onCerrarHistorial: () => void;
+  onElegirResultado: (resultado: string) => void;
+  onBorrarHistorial: () => void;
+}
 
-export default function Display() {
+export default function Display({
+  expresion,
+  resultado,
+  modo,
+  historial,
+  historialVisible,
+  onCerrarHistorial,
+  onElegirResultado,
+  onBorrarHistorial,
+}: DisplayProps) {
+  const hayError = resultado.startsWith("Error");
+  // El emoji es la última palabra del modo
+  const emojiModo = modo !== null ? modo.split(" ").pop() : "🧮";
+
   return (
-    <View style={styles.contenedor}>
-      <View style={styles.encabezado}>
-        <View style={styles.logo}>
-          <Text style={styles.logoTexto}>N</Text>
-        </View>
+    <>
+      <View style={styles.contenedor}>
+        <Text style={styles.marcaAgua}>{emojiModo}</Text>
 
-        <View>
-          <Text style={styles.titulo}>NEXUS</Text>
-          <Text style={styles.subtitulo}>CALCULATOR / PRO</Text>
-        </View>
+        {modo !== null ? (
+          <View style={styles.chip}>
+            <Text style={styles.chipTexto}>{modo}</Text>
+          </View>
+        ) : null}
 
-        <View style={styles.estado}>
-          <View style={styles.indicador} />
-          <Text style={styles.estadoTexto}>ONLINE</Text>
-        </View>
-      </View>
+        <Text style={styles.expresion} numberOfLines={1} adjustsFontSizeToFit>
+          {expresion}
+        </Text>
 
-      <View style={styles.panel}>
-        <Text style={styles.etiqueta}>OPERACIÓN</Text>
-        <Text style={styles.operacion}>0 + 0</Text>
-
-        <View style={styles.linea} />
-
-        <Text style={styles.etiqueta}>RESULTADO</Text>
-
-        <View style={styles.lineaResultado} />
-
-        <Text style={styles.resultado}>0.00</Text>
-
-        <View style={styles.lineaResultado} />
-
-        <Text style={styles.pie}>
-          PRECISION SYSTEM / 001
+        <Text
+          style={[styles.resultado, hayError && styles.resultadoError]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.4}
+        >
+          {resultado}
         </Text>
       </View>
-    </View>
+
+      <Modal
+        visible={historialVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={onCerrarHistorial}
+      >
+        <Pressable style={styles.fondo} onPress={onCerrarHistorial}>
+          <Pressable style={styles.hoja} onPress={() => {}}>
+            <View style={styles.agarre} />
+
+            <View style={styles.cabecera}>
+              <Text style={styles.titulo}>🕘 Historial</Text>
+              {historial.length > 0 ? (
+                <Pressable onPress={onBorrarHistorial} hitSlop={10}>
+                  <Text style={styles.borrar}>🗑️ Borrar todo</Text>
+                </Pressable>
+              ) : null}
+            </View>
+
+            <FlatList
+              data={historial}
+              keyExtractor={(r) => String(r.id)}
+              ListEmptyComponent={
+                <Text style={styles.vacio}>Aún no hay operaciones 🫥</Text>
+              }
+              renderItem={({ item }) => (
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.fila,
+                    pressed && { opacity: 0.6 },
+                  ]}
+                  onPress={() => {
+                    onElegirResultado(item.resultado);
+                    onCerrarHistorial();
+                  }}
+                >
+                  <Text style={styles.filaExpresion}>{item.expresion}</Text>
+                  <Text style={styles.filaResultado}>{item.resultado}</Text>
+                </Pressable>
+              )}
+            />
+
+            {historial.length > 0 ? (
+              <Text style={styles.pista}>Toca un resultado para reutilizarlo</Text>
+            ) : null}
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   contenedor: {
     flex: 1,
-    minHeight: 240,
-    margin: 14,
-    marginBottom: 8,
-    padding: 18,
-    backgroundColor: "#15191F",
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "#343B45",
-  },
-  encabezado: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginBottom: 25,
-  },
-  logo: {
-    width: 42,
-    height: 42,
-    borderRadius: 10,
-    backgroundColor: "#1769FF",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logoTexto: {
-    color: "#FFFFFF",
-    fontSize: 27,
-    fontWeight: "900",
-  },
-  titulo: {
-    color: "#FFFFFF",
-    fontSize: 19,
-    fontWeight: "900",
-    letterSpacing: 3,
-  },
-  subtitulo: {
-    color: "#77818F",
-    fontSize: 9,
-    letterSpacing: 1.5,
-    marginTop: 3,
-  },
-  estado: {
-    marginLeft: "auto",
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 5,
-  },
-  indicador: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: "#3685FF",
-  },
-  estadoTexto: {
-    color: "#8793A3",
-    fontSize: 9,
-    fontWeight: "700",
-  },
-  panel: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  etiqueta: {
-    color: "#77818F",
-    fontSize: 10,
-    fontWeight: "700",
-    letterSpacing: 2,
-    textAlign: "right",
-    marginBottom: 5,
-  },
-  operacion: {
-    color: "#AAB4C2",
-    fontSize: 24,
-    textAlign: "right",
-    marginTop: 5,
+    minHeight: 200,
+    marginHorizontal: 16,
     marginBottom: 12,
+    padding: 22,
+    backgroundColor: "#13151B",
+    borderRadius: 32,
+    justifyContent: "flex-end",
+    overflow: "hidden",
   },
-  linea: {
-    height: 1,
-    backgroundColor: "#343B45",
-    marginBottom: 14,
+  marcaAgua: {
+    position: "absolute",
+    top: 6,
+    left: 14,
+    fontSize: 120,
+    opacity: 0.07,
   },
-  lineaResultado: {
-    height: 3,
-    backgroundColor: "#1769FF",
-    borderRadius: 2,
-    marginVertical: 8,
+  chip: {
+    position: "absolute",
+    top: 20,
+    left: 22,
+    backgroundColor: "rgba(255,122,69,0.16)",
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  chipTexto: {
+    color: "#FF7A45",
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 1.5,
+  },
+  expresion: {
+    color: "#7F8796",
+    fontSize: 22,
+    textAlign: "right",
+    marginBottom: 4,
   },
   resultado: {
     color: "#FFFFFF",
-    fontSize: 46,
-    fontWeight: "800",
+    fontSize: 68,
+    fontWeight: "300",
     textAlign: "right",
-    marginVertical: 2,
   },
-  pie: {
-    color: "#667181",
-    fontSize: 9,
-    letterSpacing: 1.5,
+  resultadoError: {
+    color: "#FF6B6B",
+    fontSize: 40,
+  },
+  fondo: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.65)",
+    justifyContent: "flex-end",
+  },
+  hoja: {
+    maxHeight: "70%",
+    backgroundColor: "#13151B",
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingHorizontal: 22,
+    paddingTop: 10,
+    paddingBottom: 28,
+  },
+  agarre: {
+    alignSelf: "center",
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#2E323C",
+    marginBottom: 16,
+  },
+  cabecera: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  titulo: { color: "#FFFFFF", fontSize: 18, fontWeight: "700" },
+  borrar: { color: "#FF6B6B", fontSize: 13, fontWeight: "600" },
+  vacio: {
+    color: "#7F8796",
+    textAlign: "center",
+    paddingVertical: 36,
+    fontSize: 14,
+  },
+  fila: {
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#1F222A",
+  },
+  filaExpresion: { color: "#7F8796", fontSize: 14, textAlign: "right" },
+  filaResultado: {
+    color: "#FFFFFF",
+    fontSize: 28,
+    fontWeight: "300",
     textAlign: "right",
-    marginTop: 10,
+    marginTop: 2,
+  },
+  pista: {
+    color: "#5A6270",
+    fontSize: 12,
+    textAlign: "center",
+    marginTop: 14,
   },
 });
